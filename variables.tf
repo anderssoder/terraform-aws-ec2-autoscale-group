@@ -354,6 +354,11 @@ variable "cfn_stack_description" {
   description = "Sets the description on the Cloudformation stack."
 }
 
+variable "cfn_signal_count" {
+  description = "cfn_signal_count"
+  default     = 1
+}
+
 variable "cfn_creation_policy_timeout" {
   type        = "string"
   default     = "PT10M"
