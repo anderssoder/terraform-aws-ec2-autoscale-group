@@ -70,38 +70,62 @@ data "null_data_source" "tags_as_list_of_maps" {
   )}"
 }
 
-resource "aws_autoscaling_group" "default" {
+resource "aws_cloudformation_stack" "default" {
   count = "${var.enabled == "true" ? 1 : 0}"
 
-  name_prefix               = "${format("%s%s", module.label.id, var.delimiter)}"
-  vpc_zone_identifier       = ["${var.subnet_ids}"]
-  max_size                  = "${var.max_size}"
-  min_size                  = "${var.min_size}"
-  load_balancers            = ["${var.load_balancers}"]
-  health_check_grace_period = "${var.health_check_grace_period}"
-  health_check_type         = "${var.health_check_type}"
-  min_elb_capacity          = "${var.min_elb_capacity}"
-  wait_for_elb_capacity     = "${var.wait_for_elb_capacity}"
-  target_group_arns         = ["${var.target_group_arns}"]
-  default_cooldown          = "${var.default_cooldown}"
-  force_delete              = "${var.force_delete}"
-  termination_policies      = "${var.termination_policies}"
-  suspended_processes       = "${var.suspended_processes}"
-  placement_group           = "${var.placement_group}"
-  enabled_metrics           = ["${var.enabled_metrics}"]
-  metrics_granularity       = "${var.metrics_granularity}"
-  wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
-  protect_from_scale_in     = "${var.protect_from_scale_in}"
-  service_linked_role_arn   = "${var.service_linked_role_arn}"
+  name = "terraform-${format("%s%s", module.label.id, var.delimiter)}"
 
-  launch_template = {
-    id      = "${join("", aws_launch_template.default.*.id)}"
-    version = "${aws_launch_template.default.latest_version}"
-  }
+  template_body = <<EOF
+Description: "${var.cfn_stack_description}"
+Resources:
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+    AutoScalingGroupName: "${format("%s%s", module.label.id, var.delimiter)}"
+      VPCZoneIdentifier: ["${var.subnet_ids}"]
+      LaunchTemplate:
+        LaunchTemplateId: "${join("", aws_launch_template.default.*.id)}"
+        Version: "${aws_launch_template.default.latest_version}"
+      MinSize: "${var.min_size}"
+      MaxSize: "${var.max_size}"
+      LoadBalancerNames: ["${var.load_balancers}"]
+      HealthCheckType: "${var.health_check_type}"
+      HealthCheckGracePeriod: "${var.health_check_grace_period}"
+      TerminationPolicies: "${var.termination_policies}"
+      ServiceLinkedRoleARN: "${var.service_linked_role_arn}"
+      MetricsCollection:
+        Granularity: "${var.metrics_granularity}"
+        Metrics: ["${var.enabled_metrics}"]
+      Tags: ["${data.null_data_source.tags_as_list_of_maps.*.outputs}"]
+      PlacementGroup: "${var.placement_group}"
+      TargetGroupARNs: ["${var.target_group_arns}"]
+      Cooldown: "${var.default_cooldown}"
+    CreationPolicy:
+      AutoScalingCreationPolicy:
+        MinSuccessfulInstancesPercent: "${var.cfn_creation_policy_min_successful_instances_percent}"
+      ResourceSignal:
+        Count: "${var.cfn_signal_count}"
+        Timeout: "${var.cfn_creation_policy_timeout}"
+    UpdatePolicy:
+      # Ignore differences in group size properties caused by scheduled actions
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
+      AutoScalingRollingUpdate:
+        MaxBatchSize: "${var.cfn_update_policy_max_batch_size}"
+        MinInstancesInService: "${var.min_size}"
+        MinSuccessfulInstancesPercent: "${var.cfn_update_policy_min_successful_instances_percent}"
+        PauseTime: "${var.cfn_update_policy_pause_time}"
+        SuspendProcesses: ["${var.cfn_update_policy_suspended_processes}"]
+        WaitOnResourceSignals: "${var.cfn_update_policy_wait_on_resource_signals}"
+    DeletionPolicy: "${var.cfn_deletion_policy}"
+Outputs:
+  AsgName:
+    Description: The Auto Scaling Group name
+    Value: !Ref ASG
+  EOF
+}
 
-  tags = ["${data.null_data_source.tags_as_list_of_maps.*.outputs}"]
-
-  lifecycle {
-    create_before_destroy = true
-  }
+data "aws_autoscaling_group" "default" {
+  name       = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
+  depends_on = ["aws_cloudformation_stack.default"]
 }

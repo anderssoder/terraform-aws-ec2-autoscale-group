@@ -193,12 +193,6 @@ variable "termination_policies" {
   default     = ["Default"]
 }
 
-variable "suspended_processes" {
-  type        = "list"
-  description = "A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly."
-  default     = []
-}
-
 variable "placement_group" {
   type        = "string"
   description = "The name of the placement group into which you'll launch your instances, if any"
@@ -352,4 +346,59 @@ variable "cpu_utilization_low_statistic" {
   type        = "string"
   default     = "Average"
   description = "The statistic to apply to the alarm's associated metric. Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`"
+}
+
+variable "cfn_stack_description" {
+  type        = "string"
+  default     = "Managed by Terraform, do not manually modify. Creates Autoscaling group with rolling update support."
+  description = "Sets the description on the Cloudformation stack."
+}
+
+variable "cfn_creation_policy_timeout" {
+  type        = "string"
+  default     = "PT10M"
+  description = "The length of time that AWS CloudFormation waits for the number of signals that was specified in the Count property. The timeout period starts after AWS CloudFormation starts creating the resource, and the timeout expires no sooner than the time you specify but can occur shortly thereafter. The maximum time that you can specify is 12 hours."
+}
+
+variable "cfn_creation_policy_min_successful_instances_percent" {
+  default     = 80
+  description = "Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created."
+}
+
+variable "cfn_update_policy_min_successful_instances_percent" {
+  default     = 80
+  description = "description"
+}
+
+variable "cfn_update_policy_max_batch_size" {
+  default     = 1
+  description = "Specifies the maximum number of instances that AWS CloudFormation updates."
+}
+
+variable "cfn_update_policy_ignore_unmodified_group_size_properties" {
+  default     = true
+  description = "Specifies whether AWS CloudFormation ignores differences in group size properties between your current Auto Scaling group and the Auto Scaling group described in the AWS::AutoScaling::AutoScalingGroup resource of your template during a stack update. If you modify any of the group size property values in your template, AWS CloudFormation uses the modified values and updates your Auto Scaling group."
+}
+
+variable "cfn_update_policy_pause_time" {
+  type        = "string"
+  default     = "PT15M"
+  description = "The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group."
+}
+
+variable "cfn_update_policy_suspended_processes" {
+  type        = "list"
+  description = "A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly."
+  default     = ["HealthCheck", "ReplaceUnhealthy", "AZRebalance", "AlarmNotification", "ScheduledActions"]
+}
+
+variable "cfn_update_policy_wait_on_resource_signals" {
+  description = "Specifies whether the Auto Scaling group waits on signals from new instances during an update. Use this property to ensure that instances have completed installing and configuring applications before the Auto Scaling group update proceeds."
+  default     = true
+}
+
+variable "cfn_deletion_policy" {
+  type        = "string"
+  description = "With the DeletionPolicy attribute you can preserve or (in some cases) backup a resource when its stack is deleted. You specify a DeletionPolicy attribute for each resource that you want to control. If a resource has no DeletionPolicy attribute, AWS CloudFormation deletes the resource by default. Allowed values: `Delete`, `Retain`, `Snapshot`"
+  default     = "Retain"
 }
