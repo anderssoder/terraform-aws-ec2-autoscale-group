@@ -7,7 +7,7 @@ locals {
     AsgName = ""
   }
 
-  tmp_list           = "${coalescelist(aws_cloudformation_stack.default.*.outputs, list(local.empty_map))}"
+  tmp_list           = "${coalescelist(aws_cloudformation_stack.default.outputs, list(local.empty_map))}"
   tmp_map            = "${local.tmp_list[0]}"
   cf_outputs_AsgName = "${lookup(local.tmp_map, "AsgName", "")}"
 }
