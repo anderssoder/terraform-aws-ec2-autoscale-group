@@ -81,7 +81,7 @@ resource "aws_cloudformation_stack" "default" {
   tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
 
   parameters = {
-    LoadBalancerNames = ["${join("\",\"", var.load_balancers)}"]
+    LoadBalancerNames = "${var.load_balancers}"
   }
 
   template_body = <<STACK
