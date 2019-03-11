@@ -127,6 +127,6 @@ Resources:
 }
 
 data "aws_autoscaling_group" "default" {
-  name       = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
+  name       = "${local.asg_name}"
   depends_on = ["aws_cloudformation_stack.default"]
 }
