@@ -74,7 +74,7 @@ resource "aws_cloudformation_stack" "default" {
   count = "${var.enabled == "true" ? 1 : 0}"
 
   name = "terraform-${format("%s%s", module.label.id, var.delimiter)}"
-  tags = ["${data.null_data_source.tags_as_list_of_maps.*.outputs}"]
+  tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
 
   template_body = <<STACK
 Description: "${var.cfn_stack_description}"
