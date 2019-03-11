@@ -2,6 +2,14 @@
 
 locals {
   autoscaling_enabled = "${var.enabled == "true" && var.autoscaling_policies_enabled == "true" ? true : false}"
+
+  empty_map = {
+    AsgName = ""
+  }
+
+  tmp_list           = "${coalescelist(aws_cloudformation_stack.default.*.outputs, list(local.empty_map))}"
+  tmp_map            = "${local.tmp_list[0]}"
+  cf_outputs_AsgName = "${lookup(local.tmp_map, "AsgName", "")}"
 }
 
 resource "aws_autoscaling_policy" "scale_up" {
@@ -11,7 +19,7 @@ resource "aws_autoscaling_policy" "scale_up" {
   adjustment_type        = "${var.scale_up_adjustment_type}"
   policy_type            = "${var.scale_up_policy_type}"
   cooldown               = "${var.scale_up_cooldown_seconds}"
-  autoscaling_group_name = "${aws_cloudformation_stack.default.outputs.AsgName}"
+  autoscaling_group_name = "${local.cf_outputs_AsgName}"
 }
 
 resource "aws_autoscaling_policy" "scale_down" {
@@ -21,7 +29,7 @@ resource "aws_autoscaling_policy" "scale_down" {
   adjustment_type        = "${var.scale_down_adjustment_type}"
   policy_type            = "${var.scale_down_policy_type}"
   cooldown               = "${var.scale_down_cooldown_seconds}"
-  autoscaling_group_name = "${aws_cloudformation_stack.default.outputs.AsgName}"
+  autoscaling_group_name = "${local.cf_outputs_AsgName}"
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
