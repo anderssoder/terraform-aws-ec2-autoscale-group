@@ -11,7 +11,8 @@ resource "aws_autoscaling_policy" "scale_up" {
   adjustment_type        = "${var.scale_up_adjustment_type}"
   policy_type            = "${var.scale_up_policy_type}"
   cooldown               = "${var.scale_up_cooldown_seconds}"
-  autoscaling_group_name = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
+  autoscaling_group_name = "${local.asg_name}"
+  depends_on             = "${aws_cloudformation_stack.default}"
 }
 
 resource "aws_autoscaling_policy" "scale_down" {
@@ -21,7 +22,8 @@ resource "aws_autoscaling_policy" "scale_down" {
   adjustment_type        = "${var.scale_down_adjustment_type}"
   policy_type            = "${var.scale_down_policy_type}"
   cooldown               = "${var.scale_down_cooldown_seconds}"
-  autoscaling_group_name = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
+  autoscaling_group_name = "${local.asg_name}"
+  depends_on             = "${aws_cloudformation_stack.default}"
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
@@ -36,11 +38,12 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   threshold           = "${var.cpu_utilization_high_threshold_percent}"
 
   dimensions {
-    AutoScalingGroupName = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
+    AutoScalingGroupName = "${local.asg_name}"
   }
 
   alarm_description = "Scale up if CPU utilization is above ${var.cpu_utilization_high_threshold_percent} for ${var.cpu_utilization_high_period_seconds} seconds"
   alarm_actions     = ["${join("", aws_autoscaling_policy.scale_up.*.arn)}"]
+  depends_on        = "${aws_cloudformation_stack.default}"
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_low" {
@@ -55,9 +58,10 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   threshold           = "${var.cpu_utilization_low_threshold_percent}"
 
   dimensions {
-    AutoScalingGroupName = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
+    AutoScalingGroupName = "${local.asg_name}"
   }
 
   alarm_description = "Scale down if the CPU utilization is below ${var.cpu_utilization_low_threshold_percent} for ${var.cpu_utilization_low_period_seconds} seconds"
   alarm_actions     = ["${join("", aws_autoscaling_policy.scale_down.*.arn)}"]
+  depends_on        = "${aws_cloudformation_stack.default}"
 }

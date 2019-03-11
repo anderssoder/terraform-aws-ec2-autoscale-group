@@ -123,9 +123,6 @@ Resources:
         SuspendProcesses: ["${join("\",\"", var.cfn_update_policy_suspended_processes)}"]
         WaitOnResourceSignals: "${var.cfn_update_policy_wait_on_resource_signals}"
     DeletionPolicy: "${var.cfn_deletion_policy}"
-Outputs:
-  AsgName:
-    Value: !Ref ASG
   STACK
 }
 
