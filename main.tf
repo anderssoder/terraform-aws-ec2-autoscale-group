@@ -75,20 +75,20 @@ resource "aws_cloudformation_stack" "default" {
 
   name = "terraform-${format("%s%s", module.label.id, var.delimiter)}"
 
-  template_body = <<EOF
+  template_body = <<STACK
 Description: "${var.cfn_stack_description}"
 Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
     AutoScalingGroupName: "${format("%s%s", module.label.id, var.delimiter)}"
-      VPCZoneIdentifier: ["${var.subnet_ids}"]
+      VPCZoneIdentifier: ["${join("\",\"", var.subnet_ids)}"]
       LaunchTemplate:
         LaunchTemplateId: "${join("", aws_launch_template.default.*.id)}"
         Version: "${aws_launch_template.default.latest_version}"
       MinSize: "${var.min_size}"
       MaxSize: "${var.max_size}"
-      LoadBalancerNames: ["${var.load_balancers}"]
+      LoadBalancerNames: "${var.load_balancers}"
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: "${var.termination_policies}"
