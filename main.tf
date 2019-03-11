@@ -82,7 +82,7 @@ Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-    AutoScalingGroupName: "${format("%s%s", module.label.id, var.delimiter)}"
+      AutoScalingGroupName: "${format("%s%s", module.label.id, var.delimiter)}"
       VPCZoneIdentifier: ["${join("\",\"", var.subnet_ids)}"]
       LaunchTemplate:
         LaunchTemplateId: "${join("", aws_launch_template.default.*.id)}"
