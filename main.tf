@@ -80,8 +80,16 @@ resource "aws_cloudformation_stack" "default" {
   name = "terraform-${local.asg_name}"
   tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
 
+  parameters = {
+    LoadBalancerNames = ["${join("\",\"", var.load_balancers)}"]
+  }
+
   template_body = <<STACK
 Description: "${var.cfn_stack_description}"
+Parameters:
+  LoadBalancerNames:
+    Type: CommaDelimitedList
+    Description: The load balancer names for the ASG
 Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -93,7 +101,7 @@ Resources:
         Version: "${aws_launch_template.default.latest_version}"
       MinSize: "${var.min_size}"
       MaxSize: "${var.max_size}"
-      LoadBalancerNames: ["${join("\",\"", var.load_balancers)}"]
+      LoadBalancerNames: !Ref LoadBalancerNames
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
