@@ -122,6 +122,8 @@ Outputs:
   AsgName:
     Description: The Auto Scaling Group name
     Value: !Ref ASG
+    Export:
+      Name: !Ref ASG
   STACK
 }
 
