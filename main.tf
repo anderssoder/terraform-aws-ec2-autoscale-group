@@ -122,7 +122,7 @@ Outputs:
   AsgName:
     Description: The Auto Scaling Group name
     Value: !Ref ASG
-  EOF
+  STACK
 }
 
 data "aws_autoscaling_group" "default" {
