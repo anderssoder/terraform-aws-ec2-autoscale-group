@@ -95,10 +95,10 @@ Resources:
       ServiceLinkedRoleARN: "${var.service_linked_role_arn}"
       MetricsCollection:
         Granularity: "${var.metrics_granularity}"
-        Metrics: ["${var.enabled_metrics}"]
-      Tags: ["${data.null_data_source.tags_as_list_of_maps.*.outputs}"]
+        Metrics: ["${join("\",\"", var.enabled_metrics)}"]
+      Tags: ["${join("\",\"", data.null_data_source.tags_as_list_of_maps.*.outputs)}"]
       PlacementGroup: "${var.placement_group}"
-      TargetGroupARNs: ["${var.target_group_arns}"]
+      TargetGroupARNs: ["${join("\",\"", var.target_group_arns)}"]
       Cooldown: "${var.default_cooldown}"
     CreationPolicy:
       AutoScalingCreationPolicy:
@@ -115,7 +115,7 @@ Resources:
         MinInstancesInService: "${var.min_size}"
         MinSuccessfulInstancesPercent: "${var.cfn_update_policy_min_successful_instances_percent}"
         PauseTime: "${var.cfn_update_policy_pause_time}"
-        SuspendProcesses: ["${var.cfn_update_policy_suspended_processes}"]
+        SuspendProcesses: ["${join("\",\"", var.cfn_update_policy_suspended_processes)}"]
         WaitOnResourceSignals: "${var.cfn_update_policy_wait_on_resource_signals}"
     DeletionPolicy: "${var.cfn_deletion_policy}"
 Outputs:
