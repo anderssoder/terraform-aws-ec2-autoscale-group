@@ -103,7 +103,7 @@ Resources:
           Granularity: "${var.metrics_granularity}"
           Metrics: ["${join("\",\"", var.enabled_metrics)}"]
       PlacementGroup: "${var.placement_group}"
-      TargetGroupARNs: "${join("\",\"", var.target_group_arns)}"
+      TargetGroupARNs: ["${join("\",\"", var.target_group_arns)}"]
       Cooldown: "${var.default_cooldown}"
     CreationPolicy:
       AutoScalingCreationPolicy:
