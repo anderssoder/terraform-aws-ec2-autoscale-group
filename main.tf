@@ -91,7 +91,7 @@ Resources:
       LoadBalancerNames: ["${join("\",\"", var.load_balancers)}"]
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
-      TerminationPolicies: "${var.termination_policies}"
+      TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
       ServiceLinkedRoleARN: "${var.service_linked_role_arn}"
       MetricsCollection:
         Granularity: "${var.metrics_granularity}"
