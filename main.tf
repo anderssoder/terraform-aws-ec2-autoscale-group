@@ -98,9 +98,10 @@ Resources:
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
       ServiceLinkedRoleARN: "${var.service_linked_role_arn}"
-      MetricsCollection: [{
+      MetricsCollection:
+        -
           Granularity: "${var.metrics_granularity}"
-          Metrics: ["${join("\",\"", var.enabled_metrics)}"]}]
+          Metrics: ["${join("\",\"", var.enabled_metrics)}"]
       PlacementGroup: "${var.placement_group}"
       TargetGroupARNs: "${join("\",\"", var.target_group_arns)}"
       Cooldown: "${var.default_cooldown}"
