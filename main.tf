@@ -90,6 +90,9 @@ Parameters:
   LoadBalancerNames:
     Type: CommaDelimitedList
     Description: The load balancer names for the ASG
+Conditions:
+  UseLoadBalancers:
+    !Not [!Equals [!Ref LoadBalancerNames, ""]]
 Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -101,7 +104,8 @@ Resources:
         Version: "${aws_launch_template.default.latest_version}"
       MinSize: "${var.min_size}"
       MaxSize: "${var.max_size}"
-      LoadBalancerNames: !Ref LoadBalancerNames
+      LoadBalancerNames: 
+        !If [UseLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
