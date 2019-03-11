@@ -44,7 +44,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   threshold           = "${var.cpu_utilization_high_threshold_percent}"
 
   dimensions {
-    AutoScalingGroupName = "${aws_cloudformation_stack.default.outputs.AsgName}"
+    AutoScalingGroupName = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
   }
 
   alarm_description = "Scale up if CPU utilization is above ${var.cpu_utilization_high_threshold_percent} for ${var.cpu_utilization_high_period_seconds} seconds"
