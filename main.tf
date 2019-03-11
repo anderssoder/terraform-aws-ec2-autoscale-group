@@ -95,7 +95,7 @@ Resources:
       ServiceLinkedRoleARN: "${var.service_linked_role_arn}"
       MetricsCollection:
         Granularity: "${var.metrics_granularity}"
-        Metrics: ["${var.enabled_metrics}"]
+        Metrics: "${var.enabled_metrics}"
       Tags: ["${data.null_data_source.tags_as_list_of_maps.*.outputs}"]
       PlacementGroup: "${var.placement_group}"
       TargetGroupARNs: ["${join("\",\"", var.target_group_arns)}"]
