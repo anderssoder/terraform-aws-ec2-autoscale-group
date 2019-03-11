@@ -88,7 +88,7 @@ Resources:
         Version: "${aws_launch_template.default.latest_version}"
       MinSize: "${var.min_size}"
       MaxSize: "${var.max_size}"
-      LoadBalancerNames: "${var.load_balancers}"
+      LoadBalancerNames: ["${join("\",\"", var.load_balancers)}"]
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: "${var.termination_policies}"
