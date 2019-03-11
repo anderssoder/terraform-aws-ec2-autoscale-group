@@ -63,7 +63,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   threshold           = "${var.cpu_utilization_low_threshold_percent}"
 
   dimensions {
-    AutoScalingGroupName = "${aws_cloudformation_stack.default.outputs.AsgName}"
+    AutoScalingGroupName = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
   }
 
   alarm_description = "Scale down if the CPU utilization is below ${var.cpu_utilization_low_threshold_percent} for ${var.cpu_utilization_low_period_seconds} seconds"
