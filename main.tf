@@ -1,10 +1,14 @@
+locals {
+  asg_name = "${module.label.id}"
+}
+
 module "label" {
-  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.1.6"
+  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.2.1"
   namespace  = "${var.namespace}"
-  name       = "${var.name}"
   stage      = "${var.stage}"
+  name       = "${var.name}"
   delimiter  = "${var.delimiter}"
-  attributes = "${var.attributes}"
+  attributes = ["${compact(concat(var.attributes, list("asg")))}"]
   tags       = "${var.tags}"
   enabled    = "${var.enabled}"
 }
@@ -73,7 +77,7 @@ data "null_data_source" "tags_as_list_of_maps" {
 resource "aws_cloudformation_stack" "default" {
   count = "${var.enabled == "true" ? 1 : 0}"
 
-  name = "terraform-${format("%s%s", module.label.id, var.delimiter)}"
+  name = "terraform-${local.asg_name}"
   tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
 
   template_body = <<STACK
@@ -82,7 +86,7 @@ Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      AutoScalingGroupName: "${format("%s%s", module.label.id, var.delimiter)}"
+      AutoScalingGroupName: "${local.asg_name"
       VPCZoneIdentifier: ["${join("\",\"", var.subnet_ids)}"]
       LaunchTemplate:
         LaunchTemplateId: "${join("", aws_launch_template.default.*.id)}"
@@ -120,7 +124,6 @@ Resources:
     DeletionPolicy: "${var.cfn_deletion_policy}"
 Outputs:
   AsgName:
-    Description: The Auto Scaling Group name
     Value: !Ref ASG
   STACK
 }
