@@ -96,7 +96,7 @@ Resources:
       MetricsCollection:
         Granularity: "${var.metrics_granularity}"
         Metrics: ["${join("\",\"", var.enabled_metrics)}"]
-      Tags: ["${data.null_data_source.tags_as_list_of_maps.*.outputs}"]
+      Tags: ["${join("\",\"", data.null_data_source.tags_as_list_of_maps.*.outputs)}"]
       PlacementGroup: "${var.placement_group}"
       TargetGroupARNs: "${join("\",\"", var.target_group_arns)}"
       Cooldown: "${var.default_cooldown}"
