@@ -27,14 +27,14 @@ data "template_file" "userdata" {
 data "template_cloudinit_config" "append_userdata" {
   part {
     filename     = "base_userdata.sh"
-    content_type = "text/x-shellscript"
-    content      = "${var.user_data_base64}"
+    #content_type = "text/x-shellscript"
+    content      = "${base64decode(var.user_data_base64)}"
   }
 
   part {
     content_type = "text/x-shellscript"
     content      = "${data.template_file.userdata.rendered}"
-    merge_type   = "list(append)+dict(recurse_array)+str()"
+    #merge_type   = "list(append)+dict(recurse_array)+str()"
   }
 }
 
