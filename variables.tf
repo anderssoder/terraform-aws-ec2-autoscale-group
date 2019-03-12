@@ -161,7 +161,7 @@ variable "default_cooldown" {
 
 variable "health_check_grace_period" {
   description = "Time (in seconds) after instance comes into service before checking health"
-  default     = 1800
+  default     = 300
 }
 
 variable "health_check_type" {
