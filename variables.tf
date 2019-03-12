@@ -161,7 +161,7 @@ variable "default_cooldown" {
 
 variable "health_check_grace_period" {
   description = "Time (in seconds) after instance comes into service before checking health"
-  default     = 300
+  default     = 1800
 }
 
 variable "health_check_type" {
@@ -356,7 +356,7 @@ variable "cfn_stack_description" {
 
 variable "cfn_stack_on_failure" {
   description = "Action to be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or DELETE."
-  default = "ROLLBACK"
+  default     = "ROLLBACK"
 }
 
 variable "cfn_signal_count" {
@@ -411,4 +411,8 @@ variable "cfn_deletion_policy" {
   type        = "string"
   description = "With the DeletionPolicy attribute you can preserve or (in some cases) backup a resource when its stack is deleted. You specify a DeletionPolicy attribute for each resource that you want to control. If a resource has no DeletionPolicy attribute, AWS CloudFormation deletes the resource by default. Allowed values: `Delete`, `Retain`, `Snapshot`"
   default     = "Retain"
+}
+
+variable "region" {
+  default = "eu-central-1"
 }

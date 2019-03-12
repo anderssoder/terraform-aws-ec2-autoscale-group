@@ -13,6 +13,31 @@ module "label" {
   enabled    = "${var.enabled}"
 }
 
+data "template_file" "userdata" {
+  template = "${file("${path.module}/userdata.tpl")}"
+
+  vars {
+    stack_name = "terraform-${local.asg_name}"
+    resource   = "ASG"
+    region     = "${var.region}"
+  }
+}
+
+# append extra user data
+data "template_cloudinit_config" "append_userdata" {
+  part {
+    filename     = "base_userdata.sh"
+    content_type = "text/x-shellscript"
+    content      = "${var.user_data_base64}"
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = "${data.template_file.userdata.rendered}"
+    merge_type   = "list(append)+dict(recurse_array)+str()"
+  }
+}
+
 resource "aws_launch_template" "default" {
   count = "${var.enabled == "true" ? 1 : 0}"
 
@@ -28,7 +53,7 @@ resource "aws_launch_template" "default" {
   instance_type                        = "${var.instance_type}"
   key_name                             = "${var.key_name}"
   placement                            = ["${var.placement}"]
-  user_data                            = "${var.user_data_base64}"
+  user_data                            = "${data.template_cloudinit_config.userdappend_userdata.rendered}"
 
   iam_instance_profile {
     name = "${var.iam_instance_profile_name}"
@@ -81,11 +106,13 @@ resource "aws_cloudformation_stack" "default" {
   tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
 
   parameters = {
-    LoadBalancerNames = "${join(",", var.load_balancers)}"
-    TargetGroupARNs = "${join(",", var.target_group_arns)}"
+    LoadBalancerNames    = "${join(",", var.load_balancers)}"
+    TargetGroupARNs      = "${join(",", var.target_group_arns)}"
     ServiceLinkedRoleARN = "${var.service_linked_role_arn}"
-    PlacementGroup = "${var.placement_group}"
+    PlacementGroup       = "${var.placement_group}"
   }
+
+  on_failure = "${var.cfn_stack_on_failure}"
 
   template_body = <<STACK
 Description: "${var.cfn_stack_description}"
@@ -139,6 +166,8 @@ Resources:
         !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
       Cooldown: "${var.default_cooldown}"
     CreationPolicy:
+      AutoScalingCreationPolicy:
+        MinSuccessfulInstancesPercent: "${var.cfn_creation_policy_min_successful_instances_percent}"
       ResourceSignal:
         Count: "${var.cfn_signal_count}"
         Timeout: "${var.cfn_creation_policy_timeout}"
