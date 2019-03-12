@@ -139,8 +139,6 @@ Resources:
         !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
       Cooldown: "${var.default_cooldown}"
     CreationPolicy:
-      AutoScalingCreationPolicy:
-        MinSuccessfulInstancesPercent: "${var.cfn_creation_policy_min_successful_instances_percent}"
       ResourceSignal:
         Count: "${var.cfn_signal_count}"
         Timeout: "${var.cfn_creation_policy_timeout}"
