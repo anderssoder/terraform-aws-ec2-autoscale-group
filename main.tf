@@ -112,6 +112,8 @@ resource "aws_cloudformation_stack" "default" {
     TargetGroupARNs      = "${join(",", var.target_group_arns)}"
     ServiceLinkedRoleARN = "${var.service_linked_role_arn}"
     PlacementGroup       = "${var.placement_group}"
+    IgnoreUnmodified = "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
+    WaitOnResourceSignals = "${var.cfn_update_policy_wait_on_resource_signals}"
   }
 
   on_failure = "${var.cfn_stack_on_failure}"
@@ -135,11 +137,19 @@ Parameters:
     Type: String
     Description: The name of an existing cluster placement group into which you want to launch your instances.
     Default: ""
+  IgnoreUnmodified:
+    Type: Integer
+    Default: 0
+  WaitOnResourceSignals:
+    Type: Integer
+    Default: 0
 Conditions:
   HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
   HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
   HasServiceLinkedRoleARN: !Not [ !Equals [ !Ref ServiceLinkedRoleARN, ""]]
   HasPlacementGroup: !Not [ !Equals [ !Ref PlacementGroup, ""]]
+  IsIgnoreUnmodified: !Equals [ !Ref IgnoreUnmodified, 1]
+  IsWaitOnResourceSignals: !Equals [ !Ref WaitOnResourceSignals, 1]
 Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -176,14 +186,16 @@ Resources:
     UpdatePolicy:
       # Ignore differences in group size properties caused by scheduled actions
       AutoScalingScheduledAction:
-        IgnoreUnmodifiedGroupSizeProperties: "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
+        IgnoreUnmodifiedGroupSizeProperties: 
+          !If [IsIgnoreUnmodified, true, false]
       AutoScalingRollingUpdate:
         MaxBatchSize: "${var.cfn_update_policy_max_batch_size}"
         MinInstancesInService: "${var.min_size}"
         MinSuccessfulInstancesPercent: "${var.cfn_update_policy_min_successful_instances_percent}"
         PauseTime: "${var.cfn_update_policy_pause_time}"
         SuspendProcesses: ["${join("\",\"", var.cfn_update_policy_suspended_processes)}"]
-        WaitOnResourceSignals: "${var.cfn_update_policy_wait_on_resource_signals}"
+        WaitOnResourceSignals:
+          !If [IsWaitOnResourceSignals, true, false]
     DeletionPolicy: "${var.cfn_deletion_policy}"
   STACK
 }

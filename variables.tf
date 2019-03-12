@@ -386,7 +386,7 @@ variable "cfn_update_policy_max_batch_size" {
 }
 
 variable "cfn_update_policy_ignore_unmodified_group_size_properties" {
-  default     = "true"
+  default     = true
   description = "Specifies whether AWS CloudFormation ignores differences in group size properties between your current Auto Scaling group and the Auto Scaling group described in the AWS::AutoScaling::AutoScalingGroup resource of your template during a stack update. If you modify any of the group size property values in your template, AWS CloudFormation uses the modified values and updates your Auto Scaling group."
 }
 
@@ -404,7 +404,7 @@ variable "cfn_update_policy_suspended_processes" {
 
 variable "cfn_update_policy_wait_on_resource_signals" {
   description = "Specifies whether the Auto Scaling group waits on signals from new instances during an update. Use this property to ensure that instances have completed installing and configuring applications before the Auto Scaling group update proceeds."
-  default     = "true"
+  default     = true
 }
 
 variable "cfn_deletion_policy" {
