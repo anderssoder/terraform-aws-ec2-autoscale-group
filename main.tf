@@ -138,10 +138,10 @@ Parameters:
     Description: The name of an existing cluster placement group into which you want to launch your instances.
     Default: ""
   IgnoreUnmodified:
-    Type: Integer
+    Type: Int
     Default: 0
   WaitOnResourceSignals:
-    Type: Integer
+    Type: Int
     Default: 0
 Conditions:
   HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
