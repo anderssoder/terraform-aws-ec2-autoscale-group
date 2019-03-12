@@ -90,8 +90,9 @@ Parameters:
   LoadBalancerNames:
     Type: CommaDelimitedList
     Description: The load balancer names for the ASG
+    Default: ""
 Conditions:
-  UseLoadBalancers: !Not [ !Equals [ !Ref LoadBalancerNames, ""]]
+  UseLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
 Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
