@@ -197,10 +197,13 @@ Resources:
         WaitOnResourceSignals:
           !If [IsWaitOnResourceSignals, true, false]
     DeletionPolicy: "${var.cfn_deletion_policy}"
+Outputs:
+  AsgName:
+    Value: !Ref ASG
   STACK
 }
 
 data "aws_autoscaling_group" "default" {
-  name       = "${local.asg_name}"
+  name       = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
   depends_on = ["aws_cloudformation_stack.default"]
 }
