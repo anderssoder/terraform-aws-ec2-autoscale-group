@@ -354,6 +354,11 @@ variable "cfn_stack_description" {
   description = "Sets the description on the Cloudformation stack."
 }
 
+variable "cfn_stack_on_failure" {
+  description = "Action to be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or DELETE."
+  default = "ROLLBACK"
+}
+
 variable "cfn_signal_count" {
   description = "cfn_signal_count"
   default     = 1
