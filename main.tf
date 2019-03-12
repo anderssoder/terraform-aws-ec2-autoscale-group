@@ -14,27 +14,28 @@ module "label" {
 }
 
 data "template_file" "userdata" {
+  count = "${var.enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/userdata.tpl")}"
 
   vars {
     stack_name = "terraform-${local.asg_name}"
     resource   = "ASG"
-    region     = "${var.region}"
+    region     = "${var.cfn_region}"
   }
 }
 
 # append extra user data
 data "template_cloudinit_config" "append_userdata" {
+  count = "${var.enabled == "true" ? 1 : 0}"
   part {
     filename     = "base_userdata.sh"
-    #content_type = "text/x-shellscript"
     content      = "${base64decode(var.user_data_base64)}"
   }
 
+  # append 
   part {
     content_type = "text/x-shellscript"
-    content      = "${data.template_file.userdata.rendered}"
-    #merge_type   = "list(append)+dict(recurse_array)+str()"
+    content      = "${data.template_file.userdata.*.rendered}"
   }
 }
 
@@ -53,7 +54,7 @@ resource "aws_launch_template" "default" {
   instance_type                        = "${var.instance_type}"
   key_name                             = "${var.key_name}"
   placement                            = ["${var.placement}"]
-  user_data                            = "${data.template_cloudinit_config.append_userdata.rendered}"
+  user_data                            = "${base64encode(join("", data.template_cloudinit_config.append_userdata.*.rendered))}"
 
   iam_instance_profile {
     name = "${var.iam_instance_profile_name}"

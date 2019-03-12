@@ -413,6 +413,7 @@ variable "cfn_deletion_policy" {
   default     = "Retain"
 }
 
-variable "region" {
+variable "cfn_region" {
+  description = "The AWS CloudFormation regional endpoint to use"
   default = "eu-central-1"
 }
