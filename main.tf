@@ -14,7 +14,7 @@ module "label" {
 }
 
 data "template_file" "userdata" {
-  count    = "${var.enabled == "true" ? 1 : 0}"
+  #count    = "${var.enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/userdata.tpl")}"
 
   vars {
@@ -26,7 +26,7 @@ data "template_file" "userdata" {
 
 # append extra user data
 data "template_cloudinit_config" "append_userdata" {
-  count = "${var.enabled == "true" ? 1 : 0}"
+  #count = "${var.enabled == "true" ? 1 : 0}"
 
   part {
     filename = "base_userdata.sh"
@@ -36,7 +36,7 @@ data "template_cloudinit_config" "append_userdata" {
   # append 
   part {
     content_type = "text/x-shellscript"
-    content      = "${data.template_file.userdata.*.rendered}"
+    content      = "${data.template_file.userdata.rendered}"
   }
 }
 
@@ -55,7 +55,7 @@ resource "aws_launch_template" "default" {
   instance_type                        = "${var.instance_type}"
   key_name                             = "${var.key_name}"
   placement                            = ["${var.placement}"]
-  user_data                            = "${base64encode(join("", data.template_cloudinit_config.append_userdata.*.rendered))}"
+  user_data                            = "${base64encode(join("", data.template_cloudinit_config.append_userdata.rendered))}"
 
   iam_instance_profile {
     name = "${var.iam_instance_profile_name}"
