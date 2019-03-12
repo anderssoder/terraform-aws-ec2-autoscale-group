@@ -14,7 +14,7 @@ module "label" {
 }
 
 data "template_file" "userdata" {
-  count = "${var.enabled == "true" ? 1 : 0}"
+  count    = "${var.enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/userdata.tpl")}"
 
   vars {
@@ -27,9 +27,10 @@ data "template_file" "userdata" {
 # append extra user data
 data "template_cloudinit_config" "append_userdata" {
   count = "${var.enabled == "true" ? 1 : 0}"
+
   part {
-    filename     = "base_userdata.sh"
-    content      = "${base64decode(var.user_data_base64)}"
+    filename = "base_userdata.sh"
+    content  = "${base64decode(var.user_data_base64)}"
   }
 
   # append 
