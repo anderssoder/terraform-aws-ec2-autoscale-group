@@ -82,6 +82,9 @@ resource "aws_cloudformation_stack" "default" {
 
   parameters = {
     LoadBalancerNames = "${join(",", var.load_balancers)}"
+    TargetGroupARNs = "${join(",", var.target_group_arns)}"
+    ServiceLinkedRoleARN = "${var.service_linked_role_arn}"
+    PlacementGroup = "${var.placement_group}"
   }
 
   template_body = <<STACK
@@ -91,8 +94,23 @@ Parameters:
     Type: CommaDelimitedList
     Description: The load balancer names for the ASG
     Default: ""
+  TargetGroupARNs:
+    Type: CommaDelimitedList
+    Description: Target group ARNs for the ASG
+    Default: ""
+  ServiceLinkedRoleARN:
+    Type: String
+    Description: ARN of the role the ASG uses to call other AWS services with
+    Default: ""
+  PlacementGroup:
+    Type: String
+    Description: The name of an existing cluster placement group into which you want to launch your instances.
+    Default: ""
 Conditions:
-  UseLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
+  HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
+  HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
+  HasServiceLinkedRoleARN: !Not [ !Equals [ !Ref ServiceLinkedRoleARN, ""]]
+  HasPlacementGroup: !Not [ !Equals [ !Ref PlacementGroup, ""]]
 Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -105,17 +123,20 @@ Resources:
       MinSize: "${var.min_size}"
       MaxSize: "${var.max_size}"
       LoadBalancerNames: 
-        !If [UseLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
+        !If [HasLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
-      ServiceLinkedRoleARN: "${var.service_linked_role_arn}"
+      ServiceLinkedRoleARN:
+        !If [HasServiceLinkedRoleARN, !Ref ServiceLinkedRoleARN, !Ref "AWS::NoValue"]
       MetricsCollection:
         -
           Granularity: "${var.metrics_granularity}"
           Metrics: ["${join("\",\"", var.enabled_metrics)}"]
-      PlacementGroup: "${var.placement_group}"
-      TargetGroupARNs: ["${join("\",\"", var.target_group_arns)}"]
+      PlacementGroup:
+        !If [HasPlacementGroup, !Ref PlacementGroup, !Ref "AWS::NoValue"]
+      TargetGroupARNs:
+        !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
       Cooldown: "${var.default_cooldown}"
     CreationPolicy:
       AutoScalingCreationPolicy:
