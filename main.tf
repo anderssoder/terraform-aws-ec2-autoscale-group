@@ -53,7 +53,7 @@ resource "aws_launch_template" "default" {
   instance_type                        = "${var.instance_type}"
   key_name                             = "${var.key_name}"
   placement                            = ["${var.placement}"]
-  user_data                            = "${data.template_cloudinit_config.userdappend_userdata.rendered}"
+  user_data                            = "${data.template_cloudinit_config.append_userdata.rendered}"
 
   iam_instance_profile {
     name = "${var.iam_instance_profile_name}"
