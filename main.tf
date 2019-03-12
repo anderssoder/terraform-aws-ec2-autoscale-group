@@ -1,7 +1,3 @@
-locals {
-  asg_name = "${module.label.id}"
-}
-
 module "label" {
   source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.2.1"
   namespace  = "${var.namespace}"
