@@ -155,7 +155,7 @@ Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      AutoScalingGroupName: "${local.asg_name}"
+      AutoScalingGroupName: "${module.label.id}"
       VPCZoneIdentifier: ["${join("\",\"", var.subnet_ids)}"]
       LaunchTemplate:
         LaunchTemplateId: "${join("", aws_launch_template.default.*.id)}"
