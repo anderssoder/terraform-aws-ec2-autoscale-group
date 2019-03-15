@@ -53,7 +53,7 @@ output "autoscaling_group_health_check_type" {
   value       = "${join("", data.aws_autoscaling_group.default.*.health_check_type)}"
 }
 
-output "'cloudformation_stack_id'" {
+output "cloudformation_stack_id" {
   description = "The id of the Cloudformation stack which creates the Auto Scaling Group"
-  value       = "${join("", aws_cloudformation_stack.default.id)}"
+  value       = "${join("", aws_cloudformation_stack.default.*.id)}"
 }
