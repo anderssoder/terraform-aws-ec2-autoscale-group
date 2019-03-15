@@ -206,6 +206,7 @@ Resources:
       DefaultResult: CONTINUE
       HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
       LifecycleTransition: "autoscaling:EC2_INSTANCE_TERMINATING"
+      LifecycleHookName: "nodedrainer"
       NotificationTargetARN: "${aws_sqs_queue.default.*.arn}"
       RoleARN: "${aws_iam_role.queue_role.*.arn}"
 Outputs:
