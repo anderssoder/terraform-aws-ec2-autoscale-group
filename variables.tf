@@ -417,3 +417,13 @@ variable "cfn_region" {
   description = "The AWS CloudFormation regional endpoint to use"
   default     = "eu-central-1"
 }
+
+variable "drainer_heartbeat_timeout" {
+  description = "The amount of time (in seconds) that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Amazon EC2 Auto Scaling performs the action that you specified in the DefaultResult property."
+  default     = 300
+}
+
+variable "enable_node_drain" {
+  description = "When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group."
+  default     = false
+}

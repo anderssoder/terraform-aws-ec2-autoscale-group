@@ -100,16 +100,17 @@ data "null_data_source" "tags_as_list_of_maps" {
 resource "aws_cloudformation_stack" "default" {
   count = "${var.enabled == "true" ? 1 : 0}"
 
-  name = "terraform-${local.asg_name}"
+  name = "terraform-${module.label.id}"
   tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
 
   parameters = {
-    LoadBalancerNames    = "${join(",", var.load_balancers)}"
-    TargetGroupARNs      = "${join(",", var.target_group_arns)}"
-    ServiceLinkedRoleARN = "${var.service_linked_role_arn}"
-    PlacementGroup       = "${var.placement_group}"
-    IgnoreUnmodified = "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
+    LoadBalancerNames     = "${join(",", var.load_balancers)}"
+    TargetGroupARNs       = "${join(",", var.target_group_arns)}"
+    ServiceLinkedRoleARN  = "${var.service_linked_role_arn}"
+    PlacementGroup        = "${var.placement_group}"
+    IgnoreUnmodified      = "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
     WaitOnResourceSignals = "${var.cfn_update_policy_wait_on_resource_signals}"
+    EnableNodeDrain       = "${var.enable_node_drain}"
   }
 
   on_failure = "${var.cfn_stack_on_failure}"
@@ -139,7 +140,11 @@ Parameters:
   WaitOnResourceSignals:
     Type: Number
     Default: 0
+  EnableNodeDrain:
+    Type: Number
+    Default: 0
 Conditions:
+  DrainerEnabled: !Equals [ !Ref EnableNodeDrain, 1]
   HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
   HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
   HasServiceLinkedRoleARN: !Not [ !Equals [ !Ref ServiceLinkedRoleARN, ""]]
@@ -193,6 +198,16 @@ Resources:
         WaitOnResourceSignals:
           !If [IsWaitOnResourceSignals, true, false]
     DeletionPolicy: "${var.cfn_deletion_policy}"
+  TerminateHook:
+    Condition: DrainerEnabled 
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      DefaultResult: CONTINUE
+      HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
+      LifecycleTransition: "autoscaling:EC2_INSTANCE_TERMINATING"
+      NotificationTargetARN: "${aws_sqs_queue.default.*.arn}"
+      RoleARN: "${aws_iam_role.queue_role.*.arn}"
 Outputs:
   AsgName:
     Value: !Ref ASG
@@ -200,6 +215,57 @@ Outputs:
 }
 
 data "aws_autoscaling_group" "default" {
+  count      = "${var.enabled == "true" ? 1 : 0}"
   name       = "${aws_cloudformation_stack.default.outputs["AsgName"]}"
   depends_on = ["aws_cloudformation_stack.default"]
+}
+
+resource "aws_sqs_queue" "default" {
+  count = "${var.enabled == "true" ? 1 : 0}"
+  name  = "${module.label.id}-queue"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  count = "${var.enabled == "true" ? 1 : 0}"
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals = {
+      type        = "Service"
+      identifiers = ["autoscaling.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "queue_role" {
+  count              = "${var.enabled == "true" ? 1 : 0}"
+  name               = "${module.label.id}-queue-role"
+  assume_role_policy = "${join("", data.aws_iam_policy_document.assume_role.*.json)}"
+}
+
+resource "aws_iam_policy" "queue" {
+  count = "${var.enabled == "true" ? 1 : 0}"
+  name  = "${module.label.id}-queue-policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [ {
+    "Effect": "Allow",
+    "Action": [
+      "sqs:SendMessage",
+      "sqs:GetQueueUrl"
+    ],
+    "Resource": { "${aws_sqs_queue.default.*.arn}" }
+  } ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  count      = "${var.enabled == "true" ? 1 : 0}"
+  role       = "${join("", aws_iam_role.queue_role.*.name)}"
+  policy_arn = "${join("", aws_iam_policy.queue.*.arn)}"
 }
