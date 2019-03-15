@@ -14,7 +14,7 @@ data "template_file" "userdata" {
   template = "${file("${path.module}/userdata.tpl")}"
 
   vars {
-    stack_name = "terraform-${local.asg_name}"
+    stack_name = "terraform-${module.label.id}"
     resource   = "ASG"
     region     = "${var.cfn_region}"
   }
