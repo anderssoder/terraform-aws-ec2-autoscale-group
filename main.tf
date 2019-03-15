@@ -141,10 +141,10 @@ Parameters:
     Type: Number
     Default: 0
   NodeDrainEnabled:
-    Type: Number
+    Type: String
     Default: 0
 Conditions:
-  DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, 1]
+  DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, "true"]
   HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
   HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
   HasServiceLinkedRoleARN: !Not [ !Equals [ !Ref ServiceLinkedRoleARN, ""]]
@@ -261,7 +261,7 @@ resource "aws_iam_policy" "queue" {
       "sqs:SendMessage",
       "sqs:GetQueueUrl"
     ],
-    "Resource": { "${join("", aws_sqs_queue.default.*.arn)}" }
+    "Resource": "${join("", aws_sqs_queue.default.*.arn)}"
   } ]
 }
 EOF
