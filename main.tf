@@ -222,8 +222,9 @@ data "aws_autoscaling_group" "default" {
 }
 
 resource "aws_sqs_queue" "default" {
-  count = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
-  name  = "${module.label.id}-queue"
+  count                      = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
+  name                       = "${module.label.id}-queue"
+  visibility_timeout_seconds = 900
 }
 
 data "aws_iam_policy_document" "assume_role" {
