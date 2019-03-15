@@ -221,6 +221,7 @@ data "aws_autoscaling_group" "default" {
   depends_on = ["aws_cloudformation_stack.default"]
 }
 
+# Not actively used, just needed to create ASG lifecycle rule
 resource "aws_sqs_queue" "default" {
   count                      = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   name                       = "${module.label.id}-queue"
