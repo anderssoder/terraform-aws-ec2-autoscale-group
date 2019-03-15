@@ -259,7 +259,7 @@ resource "aws_iam_policy" "queue" {
       "sqs:SendMessage",
       "sqs:GetQueueUrl"
     ],
-    "Resource": { "${aws_sqs_queue.default.*.arn}" }
+    "Resource": { "${join("", aws_sqs_queue.default.*.arn)}" }
   } ]
 }
 EOF
