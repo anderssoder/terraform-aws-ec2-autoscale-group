@@ -423,7 +423,7 @@ variable "drainer_heartbeat_timeout" {
   default     = 300
 }
 
-variable "enable_node_drain" {
+variable "node_drain_enabled" {
   description = "When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group."
   default     = false
 }

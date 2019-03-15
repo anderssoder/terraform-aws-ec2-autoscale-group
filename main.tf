@@ -110,7 +110,7 @@ resource "aws_cloudformation_stack" "default" {
     PlacementGroup        = "${var.placement_group}"
     IgnoreUnmodified      = "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
     WaitOnResourceSignals = "${var.cfn_update_policy_wait_on_resource_signals}"
-    EnableNodeDrain       = "${var.enable_node_drain}"
+    NodeDrainEnabled      = "${var.node_drain_enabled}"
   }
 
   on_failure = "${var.cfn_stack_on_failure}"
@@ -140,11 +140,11 @@ Parameters:
   WaitOnResourceSignals:
     Type: Number
     Default: 0
-  EnableNodeDrain:
+  NodeDrainEnabled:
     Type: Number
     Default: 0
 Conditions:
-  DrainerEnabled: !Equals [ !Ref EnableNodeDrain, 1]
+  DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, 1]
   HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
   HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
   HasServiceLinkedRoleARN: !Not [ !Equals [ !Ref ServiceLinkedRoleARN, ""]]
@@ -222,12 +222,12 @@ data "aws_autoscaling_group" "default" {
 }
 
 resource "aws_sqs_queue" "default" {
-  count = "${var.enabled == "true" ? 1 : 0}"
+  count = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   name  = "${module.label.id}-queue"
 }
 
 data "aws_iam_policy_document" "assume_role" {
-  count = "${var.enabled == "true" ? 1 : 0}"
+  count = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
 
   statement {
     effect  = "Allow"
@@ -241,13 +241,13 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "queue_role" {
-  count              = "${var.enabled == "true" ? 1 : 0}"
+  count              = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   name               = "${module.label.id}-queue-role"
   assume_role_policy = "${join("", data.aws_iam_policy_document.assume_role.*.json)}"
 }
 
 resource "aws_iam_policy" "queue" {
-  count = "${var.enabled == "true" ? 1 : 0}"
+  count = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   name  = "${module.label.id}-queue-policy"
 
   policy = <<EOF
@@ -265,8 +265,8 @@ resource "aws_iam_policy" "queue" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "test-attach" {
-  count      = "${var.enabled == "true" ? 1 : 0}"
+resource "aws_iam_role_policy_attachment" "default" {
+  count      = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   role       = "${join("", aws_iam_role.queue_role.*.name)}"
   policy_arn = "${join("", aws_iam_policy.queue.*.arn)}"
 }
