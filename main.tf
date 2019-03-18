@@ -101,7 +101,7 @@ resource "aws_cloudformation_stack" "default" {
   count = "${var.enabled == "true" ? 1 : 0}"
 
   name = "terraform-${module.label.id}"
-  tags = "${data.null_data_source.tags_as_list_of_maps.*.outputs}"
+  tags = "${module.label.tags}"
 
   parameters = {
     LoadBalancerNames     = "${join(",", var.load_balancers)}"
