@@ -164,6 +164,16 @@ Resources:
       MaxSize: "${var.max_size}"
       LoadBalancerNames: 
         !If [HasLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
+      LifecycleHookSpecificationList:
+        - !If
+          - DrainerEnabled
+          - LifecycleTransition: "autoscaling:EC2_INSTANCE_TERMINATING"
+            DefaultResult: CONTINUE
+            HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
+            LifecycleHookName: "nodedrainer"
+            NotificationTargetARN: "${join("", aws_sqs_queue.default.*.arn)}"
+            RoleARN: "${join("", aws_iam_role.queue_role.*.arn)}"
+          - !Ref "AWS::NoValue"
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
@@ -198,17 +208,6 @@ Resources:
         WaitOnResourceSignals:
           !If [IsWaitOnResourceSignals, true, false]
     DeletionPolicy: "${var.cfn_deletion_policy}"
-  TerminateHook:
-    Condition: DrainerEnabled 
-    Type: AWS::AutoScaling::LifecycleHook
-    Properties:
-      AutoScalingGroupName: !Ref ASG
-      DefaultResult: CONTINUE
-      HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
-      LifecycleTransition: "autoscaling:EC2_INSTANCE_TERMINATING"
-      LifecycleHookName: "nodedrainer"
-      NotificationTargetARN: "${join("", aws_sqs_queue.default.*.arn)}"
-      RoleARN: "${join("", aws_iam_role.queue_role.*.arn)}"
 Outputs:
   AsgName:
     Value: !Ref ASG
