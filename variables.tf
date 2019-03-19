@@ -392,7 +392,7 @@ variable "cfn_update_policy_ignore_unmodified_group_size_properties" {
 
 variable "cfn_update_policy_pause_time" {
   type        = "string"
-  default     = "PT15M"
+  default     = "PT1M"
   description = "The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group."
 }
 
