@@ -30,10 +30,10 @@ data "template_cloudinit_config" "append_userdata" {
   }
 
   # append 
-  part {
-    content_type = "text/x-shellscript"
-    content      = "${data.template_file.userdata.rendered}"
-  }
+  # part {
+  #   content_type = "text/x-shellscript"
+  #   content      = "${data.template_file.userdata.rendered}"
+  # }
 }
 
 resource "aws_launch_template" "default" {
@@ -185,26 +185,26 @@ Resources:
       TargetGroupARNs:
         !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
       Cooldown: "${var.default_cooldown}"
-    CreationPolicy:
-      AutoScalingCreationPolicy:
-        MinSuccessfulInstancesPercent: "${var.cfn_creation_policy_min_successful_instances_percent}"
-      ResourceSignal:
-        Count: "${var.cfn_signal_count}"
-        Timeout: "${var.cfn_creation_policy_timeout}"
+    # CreationPolicy:
+    #   AutoScalingCreationPolicy:
+    #     MinSuccessfulInstancesPercent: "${var.cfn_creation_policy_min_successful_instances_percent}"
+    #   ResourceSignal:
+    #     Count: "${var.cfn_signal_count}"
+    #     Timeout: "${var.cfn_creation_policy_timeout}"
     UpdatePolicy:
       # Ignore differences in group size properties caused by scheduled actions
-      AutoScalingScheduledAction:
-        IgnoreUnmodifiedGroupSizeProperties: 
-          !If [IsIgnoreUnmodified, true, false]
+      # AutoScalingScheduledAction:
+      #   IgnoreUnmodifiedGroupSizeProperties: 
+      #     !If [IsIgnoreUnmodified, true, false]
       AutoScalingRollingUpdate:
         MaxBatchSize: "${var.cfn_update_policy_max_batch_size}"
         MinInstancesInService: "${var.min_size}"
-        MinSuccessfulInstancesPercent: "${var.cfn_update_policy_min_successful_instances_percent}"
+        # MinSuccessfulInstancesPercent: "${var.cfn_update_policy_min_successful_instances_percent}"
         PauseTime: "${var.cfn_update_policy_pause_time}"
-        SuspendProcesses: ["${join("\",\"", var.cfn_update_policy_suspended_processes)}"]
-        WaitOnResourceSignals:
-          !If [IsWaitOnResourceSignals, true, false]
-    DeletionPolicy: "${var.cfn_deletion_policy}"
+        # SuspendProcesses: ["${join("\",\"", var.cfn_update_policy_suspended_processes)}"]
+        # WaitOnResourceSignals:
+        #   !If [IsWaitOnResourceSignals, true, false]
+    # DeletionPolicy: "${var.cfn_deletion_policy}"
 Outputs:
   AsgName:
     Value: !Ref ASG
