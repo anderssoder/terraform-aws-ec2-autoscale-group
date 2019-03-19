@@ -165,15 +165,11 @@ Resources:
       LoadBalancerNames: 
         !If [HasLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
       LifecycleHookSpecificationList:
-        - !If
-          - DrainerEnabled
-          - - LifecycleTransition: "autoscaling:EC2_INSTANCE_TERMINATING"
-              DefaultResult: CONTINUE
-              HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
-              LifecycleHookName: "nodedrainer"
-              NotificationTargetARN: "${join("", aws_sqs_queue.default.*.arn)}"
-              RoleARN: "${join("", aws_iam_role.queue_role.*.arn)}"
-          - - !Ref "AWS::NoValue"
+        DefaultResult: CONTINUE
+        HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
+        LifecycleHookName: "nodedrainer"
+        NotificationTargetARN: "${join("", aws_sqs_queue.default.*.arn)}"
+        RoleARN: "${join("", aws_iam_role.queue_role.*.arn)}"
       HealthCheckType: "${var.health_check_type}"
       HealthCheckGracePeriod: "${var.health_check_grace_period}"
       TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
