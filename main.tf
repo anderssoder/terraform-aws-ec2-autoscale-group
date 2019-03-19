@@ -104,13 +104,28 @@ resource "aws_cloudformation_stack" "default" {
   tags = "${module.label.tags}"
 
   parameters = {
-    LoadBalancerNames     = "${join(",", var.load_balancers)}"
-    TargetGroupARNs       = "${join(",", var.target_group_arns)}"
-    ServiceLinkedRoleARN  = "${var.service_linked_role_arn}"
-    PlacementGroup        = "${var.placement_group}"
-    IgnoreUnmodified      = "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
-    WaitOnResourceSignals = "${var.cfn_update_policy_wait_on_resource_signals}"
-    NodeDrainEnabled      = "${var.node_drain_enabled}"
+    AutoScalingGroupName   = "${module.label.id}"
+    VPCZoneIdentifier      = "${join("\",\"", var.subnet_ids)}"
+    LaunchTemplateId       = "${join("", aws_launch_template.default.*.id)}"
+    LaunchTemplateVersion  = "${aws_launch_template.default.latest_version}"
+    MinSize                = "${var.min_size}"
+    MaxSize                = "${var.max_size}"
+    LoadBalancerNames      = "${join(",", var.load_balancers)}"
+    TargetGroupARNs        = "${join(",", var.target_group_arns)}"
+    ServiceLinkedRoleARN   = "${var.service_linked_role_arn}"
+    PlacementGroup         = "${var.placement_group}"
+    IgnoreUnmodified       = "${var.cfn_update_policy_ignore_unmodified_group_size_properties}"
+    WaitOnResourceSignals  = "${var.cfn_update_policy_wait_on_resource_signals}"
+    NodeDrainEnabled       = "${var.node_drain_enabled}"
+    UpdatePolicyPauseTime  = "${var.cfn_update_policy_pause_time}"
+    HeartbeatTimeout       = "${var.drainer_heartbeat_timeout}"
+    HealthCheckType        = "${var.health_check_type}"
+    HealthCheckGracePeriod = "${var.health_check_grace_period}"
+    TerminationPolicies    = "${join("\",\"", var.termination_policies)}"
+    MetricsGranularity     = "${var.metrics_granularity}"
+    Metrics                = "${join("\",\"", var.enabled_metrics)}"
+    Cooldown               = "${var.default_cooldown}"
+    MaxBatchSize           = "${var.cfn_update_policy_max_batch_size}"
   }
 
   on_failure = "${var.cfn_stack_on_failure}"
@@ -118,6 +133,23 @@ resource "aws_cloudformation_stack" "default" {
   template_body = <<STACK
 Description: "${var.cfn_stack_description}"
 Parameters:
+  AutoScalingGroupName:
+    Type: String
+  VPCZoneIdentifier:
+    Type: CommaDelimitedList
+    Default: ""
+  LaunchTemplateId:
+    Type: String
+    Default: ""
+  LaunchTemplateVersion:
+    Type: String
+    Default: ""
+  MinSize:
+    Type: String
+    Default: ""
+  MaxSize:
+    Type: String
+    Default: ""
   LoadBalancerNames:
     Type: CommaDelimitedList
     Description: The load balancer names for the ASG
@@ -143,6 +175,32 @@ Parameters:
   NodeDrainEnabled:
     Type: String
     Default: 0
+  UpdatePolicyPauseTime:
+    Type: String
+    Default: PT15M
+  HeartbeatTimeout:
+    Type: Number
+    Default: 300
+  HealthCheckType:
+    Type: String
+    Default: EC2
+  HealthCheckGracePeriod:
+    Type: Number
+    Default: 300
+  TerminationPolicies:
+    Type: CommaDelimitedList
+    Default: ""
+  MetricsGranularity:
+    Type: String
+  Metrics:
+    Type: CommaDelimitedList
+    Default: ""
+  Cooldown:
+    Type: String
+    Default: 300
+  MaxBatchSize:
+    Type: Number
+    Default: 1
 Conditions:
   DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, "true"]
   HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
@@ -155,36 +213,34 @@ Resources:
   ASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      AutoScalingGroupName: "${module.label.id}"
-      VPCZoneIdentifier: ["${join("\",\"", var.subnet_ids)}"]
+      AutoScalingGroupName: !Ref AutoScalingGroupName
+      VPCZoneIdentifier: !Ref VPCZoneIdentifier
       LaunchTemplate:
-        LaunchTemplateId: "${join("", aws_launch_template.default.*.id)}"
-        Version: "${aws_launch_template.default.latest_version}"
-      MinSize: "${var.min_size}"
-      MaxSize: "${var.max_size}"
+        LaunchTemplateId: !Ref LaunchTemplateId
+        Version: !Ref LaunchTemplateVersion
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
       LoadBalancerNames: 
         !If [HasLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
       LifecycleHookSpecificationList:
         - LifecycleTransition: "autoscaling:EC2_INSTANCE_TERMINATING"
           DefaultResult: CONTINUE
-          HeartbeatTimeout: "${var.drainer_heartbeat_timeout}"
+          HeartbeatTimeout: !Ref HeartbeatTimeout
           LifecycleHookName: "nodedrainer"
-          NotificationTargetARN: "${join("", aws_sqs_queue.default.*.arn)}"
-          RoleARN: "${join("", aws_iam_role.queue_role.*.arn)}"
-      HealthCheckType: "${var.health_check_type}"
-      HealthCheckGracePeriod: "${var.health_check_grace_period}"
-      TerminationPolicies: ["${join("\",\"", var.termination_policies)}"]
+      HealthCheckType: !Ref HealthCheckType
+      HealthCheckGracePeriod: !Ref HealthCheckGracePeriod
+      TerminationPolicies: !Ref TerminationPolicies
       ServiceLinkedRoleARN:
         !If [HasServiceLinkedRoleARN, !Ref ServiceLinkedRoleARN, !Ref "AWS::NoValue"]
       MetricsCollection:
         -
-          Granularity: "${var.metrics_granularity}"
-          Metrics: ["${join("\",\"", var.enabled_metrics)}"]
+          Granularity: !Ref MetricsGranularity
+          Metrics: !Ref Metrics
       PlacementGroup:
         !If [HasPlacementGroup, !Ref PlacementGroup, !Ref "AWS::NoValue"]
       TargetGroupARNs:
         !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
-      Cooldown: "${var.default_cooldown}"
+      Cooldown: !Ref Cooldown
     # CreationPolicy:
     #   AutoScalingCreationPolicy:
     #     MinSuccessfulInstancesPercent: "${var.cfn_creation_policy_min_successful_instances_percent}"
@@ -197,10 +253,10 @@ Resources:
       #   IgnoreUnmodifiedGroupSizeProperties: 
       #     !If [IsIgnoreUnmodified, true, false]
       AutoScalingRollingUpdate:
-        MaxBatchSize: "${var.cfn_update_policy_max_batch_size}"
-        MinInstancesInService: "${var.min_size}"
+        MaxBatchSize: !Ref MaxBatchSize
+        MinInstancesInService: !Ref MinSize
         # MinSuccessfulInstancesPercent: "${var.cfn_update_policy_min_successful_instances_percent}"
-        PauseTime: "${var.cfn_update_policy_pause_time}"
+        PauseTime: !Ref UpdatePolicyPauseTime
         # SuspendProcesses: ["${join("\",\"", var.cfn_update_policy_suspended_processes)}"]
         # WaitOnResourceSignals:
         #   !If [IsWaitOnResourceSignals, true, false]
