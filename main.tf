@@ -171,13 +171,13 @@ Parameters:
     Default: 0
   WaitOnResourceSignals:
     Type: Number
-    Default: 0
+    Default: 1
   NodeDrainEnabled:
     Type: String
     Default: 0
   UpdatePolicyPauseTime:
     Type: String
-    Default: PT15M
+    Default: PT5M
   HeartbeatTimeout:
     Type: Number
     Default: 300
