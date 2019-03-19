@@ -105,8 +105,8 @@ resource "aws_cloudformation_stack" "default" {
 
   parameters = {
     AutoScalingGroupName   = "${module.label.id}"
-    VPCZoneIdentifier      = "${join("\",\"", var.subnet_ids)}"
-    LaunchTemplateId       = "${join("", aws_launch_template.default.*.id)}"
+    VPCZoneIdentifier      = "${join(",", var.subnet_ids)}"
+    LaunchTemplateId       = "${join(",", aws_launch_template.default.*.id)}"
     LaunchTemplateVersion  = "${aws_launch_template.default.latest_version}"
     MinSize                = "${var.min_size}"
     MaxSize                = "${var.max_size}"
@@ -121,9 +121,9 @@ resource "aws_cloudformation_stack" "default" {
     HeartbeatTimeout       = "${var.drainer_heartbeat_timeout}"
     HealthCheckType        = "${var.health_check_type}"
     HealthCheckGracePeriod = "${var.health_check_grace_period}"
-    TerminationPolicies    = "${join("\",\"", var.termination_policies)}"
+    TerminationPolicies    = "${join(",", var.termination_policies)}"
     MetricsGranularity     = "${var.metrics_granularity}"
-    Metrics                = "${join("\",\"", var.enabled_metrics)}"
+    Metrics                = "${join(",", var.enabled_metrics)}"
     Cooldown               = "${var.default_cooldown}"
     MaxBatchSize           = "${var.cfn_update_policy_max_batch_size}"
   }
