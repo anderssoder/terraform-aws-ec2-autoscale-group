@@ -171,7 +171,7 @@ Parameters:
     Default: 0
   WaitOnResourceSignals:
     Type: Number
-    Default: 1
+    Default: 0
   NodeDrainEnabled:
     Type: String
     Default: 0
