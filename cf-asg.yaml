@@ -1,0 +1,150 @@
+Description: "Managed by Terraform, do not manually modify. Creates Autoscaling group with rolling update support."
+Parameters:
+  AutoScalingGroupName:
+    Type: String
+  VPCZoneIdentifier:
+    Type: CommaDelimitedList
+    Default: ""
+  LaunchTemplateId:
+    Type: String
+    Default: ""
+  LaunchTemplateVersion:
+    Type: String
+    Default: ""
+  MinSize:
+    Type: String
+    Default: ""
+  MaxSize:
+    Type: String
+    Default: ""
+  LoadBalancerNames:
+    Type: CommaDelimitedList
+    Description: The load balancer names for the ASG
+    Default: ""
+  TargetGroupARNs:
+    Type: CommaDelimitedList
+    Description: Target group ARNs for the ASG
+    Default: ""
+  ServiceLinkedRoleARN:
+    Type: String
+    Description: ARN of the role the ASG uses to call other AWS services with
+    Default: ""
+  PlacementGroup:
+    Type: String
+    Description: The name of an existing cluster placement group into which you want to launch your instances.
+    Default: ""
+  IgnoreUnmodified:
+    Type: Number
+    Default: 0
+  WaitOnResourceSignals:
+    Type: Number
+    Default: 0
+  NodeDrainEnabled:
+    Type: String
+    Default: 0
+  UpdatePolicyPauseTime:
+    Type: String
+    Default: PT5M
+  HeartbeatTimeout:
+    Type: Number
+    Default: 300
+  HealthCheckType:
+    Type: String
+    Default: EC2
+  HealthCheckGracePeriod:
+    Type: Number
+    Default: 300
+  TerminationPolicies:
+    Type: CommaDelimitedList
+    Default: ""
+  MetricsGranularity:
+    Type: String
+  Metrics:
+    Type: CommaDelimitedList
+    Default: ""
+  Cooldown:
+    Type: String
+    Default: 300
+  MaxBatchSize:
+    Type: Number
+    Default: 1
+  UpdatePolicySuspendedProcesses:
+    Type: CommaDelimitedList
+    Default: ""
+  CreationPolicyMinSuccessfulInstancesPercent:
+    Type: Number
+    Default: 80
+  CreationPolicyTimeout:
+    Type: String
+    Default: PT10M
+  SignalCount:
+    Type: Number
+    Default: 1
+  DeletionPolicy:
+    Type: String
+    Default: Retain
+Conditions:
+  DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, "true"]
+  HasLoadBalancers: !Not [ !Equals [ !Join [ "", !Ref LoadBalancerNames], ""]]
+  HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
+  HasServiceLinkedRoleARN: !Not [ !Equals [ !Ref ServiceLinkedRoleARN, ""]]
+  HasPlacementGroup: !Not [ !Equals [ !Ref PlacementGroup, ""]]
+  IsIgnoreUnmodified: !Equals [ !Ref IgnoreUnmodified, 1]
+  IsWaitOnResourceSignals: !Equals [ !Ref WaitOnResourceSignals, 1]
+Resources:
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroupName
+      VPCZoneIdentifier: !Ref VPCZoneIdentifier
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplateId
+        Version: !Ref LaunchTemplateVersion
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
+      LoadBalancerNames: 
+        !If [HasLoadBalancers, !Ref LoadBalancerNames, !Ref "AWS::NoValue"]
+      LifecycleHookSpecificationList:
+        - !If
+          - DrainerEnabled
+          - LifecycleTransition: 'autoscaling:EC2_INSTANCE_TERMINATING'
+            DefaultResult: 'CONTINUE'
+            HeartbeatTimeout: !Ref HeartbeatTimeout
+            LifecycleHookName: 'nodedrainer'
+          - !Ref "AWS::NoValue"
+      HealthCheckType: !Ref HealthCheckType
+      HealthCheckGracePeriod: !Ref HealthCheckGracePeriod
+      TerminationPolicies: !Ref TerminationPolicies
+      ServiceLinkedRoleARN:
+        !If [HasServiceLinkedRoleARN, !Ref ServiceLinkedRoleARN, !Ref "AWS::NoValue"]
+      MetricsCollection:
+        -
+          Granularity: !Ref MetricsGranularity
+          Metrics: !Ref Metrics
+      PlacementGroup:
+        !If [HasPlacementGroup, !Ref PlacementGroup, !Ref "AWS::NoValue"]
+      TargetGroupARNs:
+        !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
+      Cooldown: !Ref Cooldown
+    CreationPolicy:
+      AutoScalingCreationPolicy:
+        MinSuccessfulInstancesPercent: !Ref CreationPolicyMinSuccessfulInstancesPercent
+      ResourceSignal:
+        Count: !Ref SignalCount
+        Timeout: !Ref CreationPolicyTimeout
+    UpdatePolicy:
+      # Ignore differences in group size properties caused by scheduled actions
+      AutoScalingScheduledAction:
+        IgnoreUnmodifiedGroupSizeProperties: 
+          !If [IsIgnoreUnmodified, true, false]
+      AutoScalingRollingUpdate:
+        MaxBatchSize: !Ref MaxBatchSize
+        MinInstancesInService: !Ref MinSize
+        PauseTime: !Ref UpdatePolicyPauseTime
+        SuspendProcesses: !Ref UpdatePolicySuspendedProcesses
+        WaitOnResourceSignals:
+          !If [IsWaitOnResourceSignals, true, false]
+    DeletionPolicy: !Ref DeletionPolicy
+Outputs:
+  AsgName:
+    Value: !Ref ASG

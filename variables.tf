@@ -348,12 +348,6 @@ variable "cpu_utilization_low_statistic" {
   description = "The statistic to apply to the alarm's associated metric. Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`"
 }
 
-variable "cfn_stack_description" {
-  type        = "string"
-  default     = "Managed by Terraform, do not manually modify. Creates Autoscaling group with rolling update support."
-  description = "Sets the description on the Cloudformation stack."
-}
-
 variable "cfn_stack_on_failure" {
   description = "Action to be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or DELETE."
   default     = "ROLLBACK"
@@ -375,10 +369,10 @@ variable "cfn_creation_policy_min_successful_instances_percent" {
   description = "Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created."
 }
 
-variable "cfn_update_policy_min_successful_instances_percent" {
-  default     = 60
-  description = "description"
-}
+# variable "cfn_update_policy_min_successful_instances_percent" {
+#   default     = 60
+#   description = "description"
+# }
 
 variable "cfn_update_policy_max_batch_size" {
   default     = 1
