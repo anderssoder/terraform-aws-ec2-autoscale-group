@@ -135,7 +135,7 @@ resource "aws_cloudformation_stack" "default" {
 
   on_failure = "${var.cfn_stack_on_failure}"
 
-  template_body = "${file("cf-asg.yaml")}"
+  template_body = "${file("${path.module}/cf-asg.yaml")}"
 }
 
 data "aws_autoscaling_group" "default" {
